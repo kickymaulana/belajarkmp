@@ -24,7 +24,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,14 +40,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun TodoScreen(
     viewModel: TodoViewModel = viewModel { TodoViewModel() }
 ) {
-    // mengambil state dari ViewModel secara reactive
     val todoList by viewModel.todoList.collectAsStateWithLifecycle()
     var inputText by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Belajar KMP Todo") },
+                title = { Text("Todo App") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
@@ -56,53 +54,47 @@ fun TodoScreen(
         }
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            // Baris input form
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
                     value = inputText,
-                    onValueChange = { inputText = it },
-                    label = { Text("Tambah Tugas Baru") },
+                    onValueChange = { inputText = it},
+                    label = { Text("Ketikan Todo")},
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
-                    onClick = {
-                        viewModel.addTodo(inputText)
-                        inputText = "" // Reset form setelah submit
+                    onClick ={
+                       viewModel.addTodo(inputText)
+                        inputText = ""
                     }
                 ) {
                     Text("Tambah")
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            // List Daftar Tugas
+            Spacer(modifier = Modifier.height(8.dp))
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
-            ){
+            ) {
                 items(todoList, key = { it.id }) { item ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
                             containerColor = if (item.isCompleted)
-                            MaterialTheme.colorScheme.surfaceVariant
+                                MaterialTheme.colorScheme.surfaceVariant
                             else
-                            MaterialTheme.colorScheme.surface
+                                MaterialTheme.colorScheme.surface
                         )
-                    ){
+                    ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Checkbox(
@@ -112,14 +104,16 @@ fun TodoScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = item.title,
-                                modifier = Modifier.weight(1f),
-                                textDecoration = if(item.isCompleted)
+                                textDecoration = if (item.isCompleted)
                                     TextDecoration.LineThrough
                                 else
-                                    TextDecoration.None
+                                    TextDecoration.None,
+                                modifier = Modifier.weight(1f)
                             )
                             Button(
-                                onClick = { viewModel.deleteTodo(item.id)},
+                                onClick = {
+                                    viewModel.deleteTodo(item.id)
+                                },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.error
                                 )
@@ -127,12 +121,9 @@ fun TodoScreen(
                                 Text("Hapus")
                             }
                         }
-
                     }
-
                 }
             }
         }
-
     }
 }
