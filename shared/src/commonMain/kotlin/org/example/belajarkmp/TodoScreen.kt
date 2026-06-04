@@ -1,5 +1,6 @@
 package org.example.belajarkmp
 
+import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -64,33 +65,34 @@ fun TodoScreen(
             ) {
                 OutlinedTextField(
                     value = inputText,
-                    onValueChange = { inputText = it},
+                    onValueChange = { inputText = it },
                     label = { Text("Ketikan Todo")},
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
-                    onClick ={
-                       viewModel.addTodo(inputText)
+                    onClick = {
+                        viewModel.addTodo(inputText)
                         inputText = ""
                     }
                 ) {
                     Text("Tambah")
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(todoList, key = { it.id }) { item ->
+                items(todoList, key = { it.id }){ item ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
                             containerColor = if (item.isCompleted)
-                                MaterialTheme.colorScheme.surfaceVariant
+                            MaterialTheme.colorScheme.surfaceVariant
                             else
-                                MaterialTheme.colorScheme.surface
+                            MaterialTheme.colorScheme.surface
                         )
                     ) {
                         Row(
@@ -110,6 +112,7 @@ fun TodoScreen(
                                     TextDecoration.None,
                                 modifier = Modifier.weight(1f)
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Button(
                                 onClick = {
                                     viewModel.deleteTodo(item.id)
@@ -124,6 +127,8 @@ fun TodoScreen(
                     }
                 }
             }
+
         }
+
     }
 }

@@ -1,8 +1,8 @@
 package org.example.belajarkmp
 
+import androidx.compose.ui.text.font.FontVariation
 import androidx.lifecycle.ViewModel
 import com.russhwolf.settings.Settings
-import com.russhwolf.settings.get
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,30 +23,27 @@ class TodoViewModel : ViewModel(){
 
     private val settings: Settings = Settings()
     private val KEY_TODO_LIST = "key_todo_list"
-
     private val _todoList = MutableStateFlow<List<TodoItem>>(emptyList())
     val todoList: StateFlow<List<TodoItem>> = _todoList.asStateFlow()
 
     init {
         loadSavedTodos()
     }
-
-    private fun loadSavedTodos() {
-        val jsonString = settings.getString(KEY_TODO_LIST, "")
-        if (jsonString.isNotEmpty()) {
-            try {
-                val savedList = Json.decodeFromString<List<TodoItem>>(jsonString)
-                _todoList.value = savedList
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
     private fun savedTodosToStorage(){
         try {
             val jsonString = Json.encodeToString(_todoList.value)
             settings.putString(KEY_TODO_LIST, jsonString)
-        } catch (e: Exception) {
+        } catch (e: Exception){
+            e.printStackTrace()
+        }
+    }
+
+    private fun loadSavedTodos(){
+        val jsonString = settings.getString(KEY_TODO_LIST, "")
+        try {
+            val savedList = Json.decodeFromString<List<TodoItem>>(jsonString)
+            _todoList.value = savedList
+        } catch (e: Exception){
             e.printStackTrace()
         }
     }
