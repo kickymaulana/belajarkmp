@@ -2,11 +2,16 @@ package org.example.belajarkmp
 
 import androidx.compose.ui.text.font.FontVariation
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -19,58 +24,37 @@ data class TodoItem(
     val isCompleted: Boolean = false
 )
 
-class TodoViewModel : ViewModel(){
+class TodoViewModel(private val repository: TodoRepository) : ViewModel(){
 
-    private val settings: Settings = Settings()
-    private val KEY_TODO_LIST = "key_todo_list"
-    private val _todoList = MutableStateFlow<List<TodoItem>>(emptyList())
-    val todoList: StateFlow<List<TodoItem>> = _todoList.asStateFlow()
-
-    init {
-        loadSavedTodos()
-    }
-    private fun savedTodosToStorage(){
-        try {
-            val jsonString = Json.encodeToString(_todoList.value)
-            settings.putString(KEY_TODO_LIST, jsonString)
-        } catch (e: Exception){
-            e.printStackTrace()
-        }
-    }
-
-    private fun loadSavedTodos(){
-        val jsonString = settings.getString(KEY_TODO_LIST, "")
-        try {
-            val savedList = Json.decodeFromString<List<TodoItem>>(jsonString)
-            _todoList.value = savedList
-        } catch (e: Exception){
-            e.printStackTrace()
-        }
-    }
+    val todoList: StateFlow<List<TodoItem>> = repository.getTodos()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     fun addTodo(title: String){
         if (title.isBlank()) return
-        val newItem = TodoItem(
-            id = Random.nextLong(),
-            title = title
-        )
-        _todoList.update { currentList -> currentList + newItem }
-        savedTodosToStorage()
+        viewModelScope.launch {
+            val currentList = todoList.value
+            val newItem = TodoItem(id = Random.nextLong(), title = title)
+            repository.saveTodos(currentList + newItem)
+        }
     }
 
     fun toggleTodo(id: Long){
-        _todoList.update { currentList ->
-            currentList.map { item ->
-                if (item.id == id) item.copy(isCompleted = !item.isCompleted) else item
-            }
+        viewModelScope.launch {
+             val updatedList = todoList.value.map { item ->
+                 if (item.id == id) item.copy(isCompleted = !item.isCompleted) else item
+             }
+            repository.saveTodos(updatedList)
         }
-        savedTodosToStorage()
     }
 
     fun deleteTodo(id: Long){
-        _todoList.update { currentList ->
-            currentList.filter { it.id != id }
+        viewModelScope.launch {
+            val updatedList = todoList.value.filter { it.id != id }
+            repository.saveTodos(updatedList)
         }
-        savedTodosToStorage()
     }
 }
